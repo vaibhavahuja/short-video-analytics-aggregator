@@ -1,0 +1,20 @@
+{
+  "app": {
+    "name": "short-video-analytics-aggregator"
+  },
+  "server": {
+    "port": 8000,
+    "metrics_port": 8080
+  },
+  "message_queue": {
+    "kafka": {
+      "map-producer": {
+      },
+      "reduce-consumer": {
+      },
+      "event-consumer": {
+
+      }
+    }
+  }
+}
