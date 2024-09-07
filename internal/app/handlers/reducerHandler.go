@@ -20,5 +20,8 @@ func NewReducerHandler(repo repository.ShortVideoRepository) *ReducerHandler {
 func (r *ReducerHandler) HandleMessage(ctx context.Context, msg *queue.Message) error {
 	//handler only logs the message for now
 	log.Ctx(ctx).Info().Str("key", string(msg.Key)).Int("partition", msg.Partition).Msg(string(msg.Value))
+	//reducer flow
+	// can have multiple goroutines or maps -> where I count the number of integers and push it later?
+
 	return nil
 }

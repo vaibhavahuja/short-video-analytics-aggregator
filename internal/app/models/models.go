@@ -1,5 +1,11 @@
 package models
 
+import (
+	"github.com/rs/zerolog/log"
+	"strconv"
+	"time"
+)
+
 type ShortVideoAnalyticsEvent struct {
 	VideoId      string   `json:"video_id"`
 	VideoTitle   string   `json:"video_title"`
@@ -12,8 +18,39 @@ type ShortVideoAnalyticsEvent struct {
 }
 
 func (event *ShortVideoAnalyticsEvent) IsValid() bool {
-	//val := "{\n    \"video_id\": 1,\n    \"video_title\": \"Amazing Adventure\",\n    \"genres\": [\"Action\", \"Adventure\"],\n    \"user_id\": 12345,\n    \"platform\": \"YouTube\",\n    \"duration\": 3600,\n    \"timestamp\": \"2024-09-07T15:30:00Z\",\n    \"video_quality\": \"4K\"\n}\n"
-	//checks if event is valid or not
-	//val := "{\"video_id\":98765,\"video_title\":\"Amazing Adventure\",\"genres\":[\"Action\",\"Adventure\"],\"user_id\":12345,\"platform\":\"YouTube\",\"duration\":3600,\"timestamp\":\"2024-09-07T15:30:00Z\",\"video_quality\":\"4K\"}"
+	if event.UserId == 0 {
+		log.Error().Msg("invalid event. empty user id.")
+		return false
+	}
+
+	if event.VideoId == "" {
+		log.Error().Msg("invalid event. received empty video_id")
+		return false
+	}
+
+	//checks if event was sent within +- 15 seconds of actual range
+	if !isValidTimestamp(event.Timestamp) {
+		log.Error().Msg("invalid event. received invalid timestamp")
+		return false
+	}
+
 	return true
+}
+
+func isValidTimestamp(timestamp string) bool {
+	if timestamp == "" {
+		return false
+	}
+	currTime := time.Now()
+	minTime := currTime.Add(-30 * time.Second)
+	maxTime := currTime.Add(30 * time.Second)
+
+	// Convert Unix timestamp to time.Time
+	timeStampInt, err := strconv.Atoi(timestamp)
+	if err != nil {
+		return false
+	}
+	t := time.Unix(int64(timeStampInt), 0)
+	// checking if timestamp falls in given range
+	return t.After(minTime) && t.Before(maxTime)
 }

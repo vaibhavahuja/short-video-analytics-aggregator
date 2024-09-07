@@ -23,12 +23,8 @@ func NewEventHandler(producer queue.ProducerInterface) *EventHandler {
 }
 
 func (e *EventHandler) HandleMessage(ctx context.Context, msg *queue.Message) error {
-	//handler only logs the message for now
-
 	var event models.ShortVideoAnalyticsEvent
-	//val := "{\"video_id\":98765,\"video_title\":\"Amazing Adventure\",\"genres\":[\"Action\",\"Adventure\"],\"user_id\":12345,\"platform\":\"YouTube\",\"duration\":3600,\"timestamp\":\"2024-09-07T15:30:00Z\",\"video_quality\":\"4K\"}"
-	//log.Ctx(ctx).Debug().Str("value", string(msg.Value)).Msg("received message")
-	if err := json.Unmarshal([]byte(msg.Value), &event); err != nil {
+	if err := json.Unmarshal(msg.Value, &event); err != nil {
 		log.Ctx(ctx).Err(err).Msg("error while unmarshalling event")
 		return err
 	}
