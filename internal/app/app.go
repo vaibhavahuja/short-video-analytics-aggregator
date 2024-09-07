@@ -57,10 +57,12 @@ func Init() (*App, error) {
 
 func (app *App) Start() error {
 	ctx := context.Background()
-	//starting the event consumer - it runs in a separate goroutine
-
+	//starting the event and reducer handlers - both running in separate goroutines
 	eventHandler := handlers.NewEventHandler(app.mapperProducer)
 	app.eventConsumer.Consume(ctx, eventHandler)
+
+	reducerHandler := handlers.NewReducerHandler(app.repository)
+	app.reducerConsumer.Consume(ctx, reducerHandler)
 
 	startServer(app.engine)
 	return nil

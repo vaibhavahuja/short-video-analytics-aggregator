@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue"
 )
@@ -30,5 +31,8 @@ func (p *Producer) Publish(topic string, partition int, msg []byte) error {
 	if err != nil {
 		return err
 	}
+	log.Debug().Str("topic", topic).
+		Int("partition", partition).
+		Msg("Successfully published message")
 	return nil
 }
