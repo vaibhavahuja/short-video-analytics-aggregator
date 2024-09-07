@@ -3,13 +3,12 @@ package queue
 import "context"
 
 type ConsumerInterface interface {
-	Subscribe(topics []string) error
-	Consume(ctx context.Context, handler MessageHandler) error
+	Consume(ctx context.Context, handler MessageHandler)
 }
 
 // MessageHandler defines the behavior for processing a Kafka message.
 type MessageHandler interface {
-	HandleMessage(msg *Message) error
+	HandleMessage(ctx context.Context, msg *Message) error
 }
 
 type ProducerInterface interface {

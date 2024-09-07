@@ -11,9 +11,22 @@
       "map-producer": {
       },
       "reduce-consumer": {
+        "topic": "to-decide",
+        "bootstrap_servers": "localhost:9092",
+        "client_id": "my-client-id",
+        "group_id": "my-consumer-group",
+        "auto_offset_reset": "earliest",
+        "enable_auto_commit": true,
+        "auto_commit_interval_ms": 5000
       },
       "event-consumer": {
-
+        "topic": "heart-beat-events.json",
+        "bootstrap_servers": "localhost:9092",
+        "client_id": "event-consumer",
+        "group_id": "event-consumer",
+        "auto_offset_reset": "earliest",
+        "enable_auto_commit": true,
+        "auto_commit_interval_ms": 5000
       }
     }
   }

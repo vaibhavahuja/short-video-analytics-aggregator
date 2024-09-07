@@ -1,15 +1,18 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/app/handlers"
 	http2 "github.com/vaibhavahuja/short-video-analytics-aggregator/internal/endpoints/http"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue/kafka"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/repository/cassandra"
+	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/utils"
 	"net/http"
 	"os"
 	"os/signal"
@@ -28,11 +31,15 @@ func Init() (*App, error) {
 	engine := http2.GetHttpServer()
 
 	cassandraRepo := cassandra.NewCassandraRepository()
-	//todo add configs in producer and consumer to connect to the correct instance
 	mapperProducer := kafka.NewProducer()
 	//handler for event consumer does not require database access
-	eventConsumer := kafka.NewConsumer(nil)
-	reducerConsumer := kafka.NewConsumer(cassandraRepo)
+	var eventConsumerCfg *queue.ConsumerConfig
+	utils.MarshalJsonToStruct(viper.Sub("message_queue.kafka.event-consumer").AllSettings(), &eventConsumerCfg)
+	eventConsumer := kafka.NewConsumer(nil, eventConsumerCfg)
+
+	var reducerConsumerCfg *queue.ConsumerConfig
+	utils.MarshalJsonToStruct(viper.Sub("message_queue.kafka.reduce-consumer").AllSettings(), &reducerConsumerCfg)
+	reducerConsumer := kafka.NewConsumer(cassandraRepo, reducerConsumerCfg)
 
 	return &App{
 		engine:          engine,
@@ -43,6 +50,12 @@ func Init() (*App, error) {
 }
 
 func (app *App) Start() error {
+	ctx := context.Background()
+
+	//starting the event consumer - it runs in a separate goroutine
+	eventHandler := handlers.NewEventHandler()
+	app.eventConsumer.Consume(ctx, eventHandler)
+
 	startServer(app.engine)
 	return nil
 }

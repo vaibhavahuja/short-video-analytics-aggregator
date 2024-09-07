@@ -8,7 +8,7 @@ import (
 
 func InitLogger() {
 	logLevel, err := zerolog.ParseLevel(viper.GetString("log.level"))
-	if err != nil {
+	if err != nil || logLevel == zerolog.NoLevel {
 		logLevel = zerolog.DebugLevel
 	}
 	//set log level
@@ -19,6 +19,6 @@ func InitLogger() {
 			Str("service", viper.GetString("app.env")).
 			Logger()
 	}
-
 	zerolog.DefaultContextLogger = &log.Logger
+	log.Debug().Interface("level", log.Logger.GetLevel()).Msg("starting logger")
 }
