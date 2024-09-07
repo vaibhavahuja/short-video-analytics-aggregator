@@ -21,10 +21,11 @@ func NewProducer(producerConfig *queue.ProducerConfig) *Producer {
 	}
 }
 
-func (p *Producer) Publish(topic string, partition int, msg []byte) error {
+func (p *Producer) Publish(topic string, partition int, key, msg []byte) error {
 	message := kafka.Message{
 		Topic:     topic,
 		Partition: partition,
+		Key:       key,
 		Value:     msg,
 	}
 	err := p.writer.WriteMessages(context.TODO(), message)

@@ -12,5 +12,5 @@ type MessageHandler interface {
 }
 
 type ProducerInterface interface {
-	Publish(topic string, partition int, msg []byte) error
+	Publish(topic string, partition int, key, msg []byte) error
 }

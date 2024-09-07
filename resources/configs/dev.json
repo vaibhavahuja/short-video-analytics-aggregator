@@ -8,11 +8,12 @@
   },
   "message_queue": {
     "kafka": {
+      "number_of_partitions": 3,
       "map-producer": {
         "brokers": "localhost:9092"
       },
       "reduce-consumer": {
-        "topic": "test-topic",
+        "topic": "mapreduce-topic",
         "bootstrap_servers": "localhost:9092",
         "client_id": "my-client-id",
         "group_id": "my-consumer-group",
