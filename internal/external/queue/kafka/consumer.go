@@ -4,8 +4,6 @@ import (
 	"context"
 	"github.com/rs/zerolog/log"
 	"github.com/segmentio/kafka-go"
-	"time"
-
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/repository"
 )
@@ -17,10 +15,9 @@ type Consumer struct {
 
 func NewConsumer(shortVideoRepo repository.ShortVideoRepository, cfg *queue.ConsumerConfig) *Consumer {
 	readerConfig := kafka.ReaderConfig{
-		Brokers:        []string{cfg.BootstrapServers},
-		GroupID:        cfg.GroupID,
-		Topic:          cfg.Topic,
-		CommitInterval: time.Second,
+		Brokers: []string{cfg.BootstrapServers},
+		GroupID: cfg.GroupID,
+		Topic:   cfg.Topic,
 	}
 
 	if cfg.AutoOffsetReset == "earliest" {

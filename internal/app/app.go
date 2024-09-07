@@ -11,6 +11,7 @@ import (
 	http2 "github.com/vaibhavahuja/short-video-analytics-aggregator/internal/endpoints/http"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue/kafka"
+	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/repository"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/repository/cassandra"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/utils"
 	"net/http"
@@ -20,8 +21,8 @@ import (
 )
 
 type App struct {
-	engine *gin.Engine
-
+	engine          *gin.Engine
+	repository      repository.ShortVideoRepository
 	eventConsumer   queue.ConsumerInterface
 	mapperProducer  queue.ProducerInterface
 	reducerConsumer queue.ConsumerInterface
@@ -30,8 +31,12 @@ type App struct {
 func Init() (*App, error) {
 	engine := http2.GetHttpServer()
 
+	//initialising cassandra
 	cassandraRepo := cassandra.NewCassandraRepository()
-	mapperProducer := kafka.NewProducer()
+	var mapperProducerConfig *queue.ProducerConfig
+	utils.MarshalJsonToStruct(viper.Sub("message_queue.kafka.map-producer").AllSettings(), &mapperProducerConfig)
+	mapperProducer := kafka.NewProducer(mapperProducerConfig)
+
 	//handler for event consumer does not require database access
 	var eventConsumerCfg *queue.ConsumerConfig
 	utils.MarshalJsonToStruct(viper.Sub("message_queue.kafka.event-consumer").AllSettings(), &eventConsumerCfg)
@@ -42,6 +47,7 @@ func Init() (*App, error) {
 	reducerConsumer := kafka.NewConsumer(cassandraRepo, reducerConsumerCfg)
 
 	return &App{
+		repository:      cassandraRepo,
 		engine:          engine,
 		eventConsumer:   eventConsumer,
 		mapperProducer:  mapperProducer,
@@ -51,9 +57,9 @@ func Init() (*App, error) {
 
 func (app *App) Start() error {
 	ctx := context.Background()
-
 	//starting the event consumer - it runs in a separate goroutine
-	eventHandler := handlers.NewEventHandler()
+
+	eventHandler := handlers.NewEventHandler(app.mapperProducer)
 	app.eventConsumer.Consume(ctx, eventHandler)
 
 	startServer(app.engine)

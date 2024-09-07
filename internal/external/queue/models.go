@@ -20,7 +20,7 @@ type ConsumerConfig struct {
 }
 
 type ProducerConfig struct {
-	Acks         string `json:"acks"`
+	Brokers      string `json:"brokers"`
 	Compression  string `json:"compression"`
 	LingerMs     int    `json:"linger_ms"`
 	BatchSize    int    `json:"batch_size"`

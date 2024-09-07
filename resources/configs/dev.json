@@ -9,9 +9,10 @@
   "message_queue": {
     "kafka": {
       "map-producer": {
+        "brokers": "localhost:9092"
       },
       "reduce-consumer": {
-        "topic": "to-decide",
+        "topic": "test-topic",
         "bootstrap_servers": "localhost:9092",
         "client_id": "my-client-id",
         "group_id": "my-consumer-group",
