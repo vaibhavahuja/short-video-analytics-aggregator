@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/app/handlers"
+	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/app/models"
 	http2 "github.com/vaibhavahuja/short-video-analytics-aggregator/internal/endpoints/http"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue/kafka"
@@ -42,6 +43,9 @@ func Init() (*App, error) {
 	utils.MarshalJsonToStruct(viper.Sub("message_queue.kafka.event-consumer").AllSettings(), &eventConsumerCfg)
 	eventConsumer := kafka.NewConsumer(nil, eventConsumerCfg)
 
+	//Initialising the aggregatorMap
+	models.InitAggregatorMap()
+
 	var reducerConsumerCfg *queue.ConsumerConfig
 	utils.MarshalJsonToStruct(viper.Sub("message_queue.kafka.reduce-consumer").AllSettings(), &reducerConsumerCfg)
 	reducerConsumer := kafka.NewConsumer(cassandraRepo, reducerConsumerCfg)
@@ -62,6 +66,8 @@ func (app *App) Start() error {
 	app.eventConsumer.Consume(ctx, eventHandler)
 
 	reducerHandler := handlers.NewReducerHandler(app.repository)
+	//starting a processor which reads the current time and inserts into database
+	go reducerHandler.ProcessCurrentTimeData(ctx)
 	app.reducerConsumer.Consume(ctx, reducerHandler)
 
 	startServer(app.engine)

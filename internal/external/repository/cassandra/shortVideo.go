@@ -12,7 +12,7 @@ func NewCassandraRepository() *CassandraRepository {
 	return &CassandraRepository{}
 }
 
-func (cr *CassandraRepository) InsertAggregateByMinute(ctx context.Context) error {
+func (cr *CassandraRepository) InsertAggregateByMinute(ctx context.Context, videoId, timeStamp string, views int) error {
 	return nil
 }
 
