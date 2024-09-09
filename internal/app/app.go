@@ -33,7 +33,13 @@ func Init() (*App, error) {
 	engine := http2.GetHttpServer()
 
 	//initialising cassandra
-	cassandraRepo := cassandra.NewCassandraRepository()
+	var cassConfig *repository.CassandraConfig
+	utils.MarshalJsonToStruct(viper.Sub("cassandra").AllSettings(), &cassConfig)
+	cassandraRepo, err := cassandra.NewCassandraRepository(cassConfig)
+	if err != nil {
+		log.Err(err).Msg("error while initialising cassandra")
+		return nil, err
+	}
 	var mapperProducerConfig *queue.ProducerConfig
 	utils.MarshalJsonToStruct(viper.Sub("message_queue.kafka.map-producer").AllSettings(), &mapperProducerConfig)
 	mapperProducer := kafka.NewProducer(mapperProducerConfig)

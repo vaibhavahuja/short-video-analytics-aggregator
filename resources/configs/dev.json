@@ -31,5 +31,16 @@
         "auto_commit_interval_ms": 5000
       }
     }
+  },
+  "cassandra": {
+    "hosts": [
+      "127.0.0.1"
+    ],
+    "port": 9042,
+    "keyspace": "video_views_keyspace",
+    "username": "admin",
+    "password": "admin",
+    "consistency": "QUORUM",
+    "timeout": 5000
   }
 }

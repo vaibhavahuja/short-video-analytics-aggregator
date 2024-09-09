@@ -41,9 +41,10 @@ func (r *ReducerHandler) Process(ctx context.Context, videoId string, timestamp 
 	if err != nil {
 		return err
 	}
+
 	//aggregation
 	models.AggregatorMap.AddView(videoId, timeStampInMinutes)
-	log.Ctx(ctx).Debug().Msg("Successfully added view in the aggregator map")
+	log.Ctx(ctx).Debug().Str("video_id", videoId).Msg("Successfully added view in the aggregator map")
 	return nil
 }
 
@@ -64,20 +65,24 @@ func validateAndTrimTimeStampToMin(timestamp string) (string, error) {
 
 // ProcessCurrentTimeData processes the current time data in the hash map and inserts into the database
 func (r *ReducerHandler) ProcessCurrentTimeData(ctx context.Context) {
+	ticker := time.Tick(1 * time.Minute)
 	for {
-		prevMinuteTime := time.Now().Add(-1 * time.Minute)
-		prevMinuteTimeString := utils.ConvertTimeToStringUnix(prevMinuteTime)
-		//get all entries for this time
-		videoIds := models.AggregatorMap.GetVideoIdsByTimeStamp(prevMinuteTimeString)
-		for _, videoId := range videoIds {
-			// todo - do this via a worker pool, in order to control the number of goroutines spawned
-			go func(id string) {
-				views := models.AggregatorMap.GetViews(id, prevMinuteTimeString)
-				err := r.repo.InsertAggregateByMinute(ctx, id, prevMinuteTimeString, views)
-				if err != nil {
-					log.Ctx(ctx).Err(err).Msg("error while inserting aggregate by minute")
-				}
-			}(videoId)
+		select {
+		case <-ticker:
+			prevMinuteTime := time.Now().Add(-1 * time.Minute)
+			prevMinuteTimeString := utils.ConvertTimeToStringUnix(prevMinuteTime)
+			//get all entries for this time
+			videoIds := models.AggregatorMap.GetVideoIdsByTimeStamp(prevMinuteTimeString)
+			for _, videoId := range videoIds {
+				// todo - do this via a worker pool, in order to control the number of goroutines spawned
+				go func(id string) {
+					views := models.AggregatorMap.GetViews(id, prevMinuteTimeString)
+					err := r.repo.InsertAggregateByMinute(ctx, id, prevMinuteTimeString, views)
+					if err != nil {
+						log.Ctx(ctx).Err(err).Msg("error while inserting aggregate by minute")
+					}
+				}(videoId)
+			}
 
 		}
 	}
