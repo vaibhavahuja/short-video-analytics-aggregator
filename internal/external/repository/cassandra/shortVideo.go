@@ -62,5 +62,18 @@ func (cr *CassandraRepository) InsertAggregateByMinute(ctx context.Context, vide
 
 func (cr *CassandraRepository) GetViewerCountByVideoIDAndTimeRange(ctx context.Context, videoId string, timeStamp int) (int, error) {
 	//to implement later
-	return 0, nil
+	videoView := repository.VideoView{
+		VideoId:        videoId,
+		TimestampInMin: timeStamp,
+	}
+	query := cr.session.Query("SELECT sum(aggregate_views) FROM video_views WHERE video_id=? AND timestamp_in_min>?", []string{"video_id", "timestamp_in_min"}).
+		BindStruct(videoView)
+
+	var results []int
+	err := query.SelectRelease(&results)
+	if err != nil {
+		return 0, err
+	}
+
+	return results[0], nil
 }

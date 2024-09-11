@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
+	v1 "github.com/vaibhavahuja/short-video-analytics-aggregator/internal/api/v1"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/app/handlers"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/app/models"
 	http2 "github.com/vaibhavahuja/short-video-analytics-aggregator/internal/endpoints/http"
@@ -30,8 +31,6 @@ type App struct {
 }
 
 func Init() (*App, error) {
-	engine := http2.GetHttpServer()
-
 	//initialising cassandra
 	var cassConfig *repository.CassandraConfig
 	utils.MarshalJsonToStruct(viper.Sub("cassandra").AllSettings(), &cassConfig)
@@ -40,6 +39,10 @@ func Init() (*App, error) {
 		log.Err(err).Msg("error while initialising cassandra")
 		return nil, err
 	}
+
+	apiHandler := v1.NewVideoAggregatorHandler(cassandraRepo)
+	engine := http2.GetHttpServer(*apiHandler)
+
 	var mapperProducerConfig *queue.ProducerConfig
 	utils.MarshalJsonToStruct(viper.Sub("message_queue.kafka.map-producer").AllSettings(), &mapperProducerConfig)
 	mapperProducer := kafka.NewProducer(mapperProducerConfig)
