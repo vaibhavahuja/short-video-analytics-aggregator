@@ -12,7 +12,7 @@ services:
   kafka:
     image: confluentinc/cp-kafka:6.2.0
     hostname: broker
-    container_name: broker
+    container_name: kafka-container
     depends_on:
       - zookeeper
     ports:
@@ -38,3 +38,5 @@ services:
     environment:
       - CASSANDRA_USER=admin
       - CASSANDRA_PASSWORD=admin
+    volumes:
+      - ./scripts/create_cql_tables.cql:/create_cql_tables.cql
