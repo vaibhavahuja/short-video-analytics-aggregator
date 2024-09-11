@@ -4,7 +4,11 @@ go 1.22.5
 
 require (
 	github.com/gin-gonic/gin v1.10.0
+	github.com/go-playground/assert/v2 v2.2.0
+	github.com/gocql/gocql v1.6.0
 	github.com/rs/zerolog v1.33.0
+	github.com/scylladb/gocqlx/v3 v3.0.0
+	github.com/segmentio/kafka-go v0.4.47
 	github.com/spf13/viper v1.19.0
 )
 
@@ -20,7 +24,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/gocql/gocql v1.6.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -39,8 +42,6 @@ require (
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/scylladb/go-reflectx v1.0.1 // indirect
-	github.com/scylladb/gocqlx/v3 v3.0.0 // indirect
-	github.com/segmentio/kafka-go v0.4.47 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect

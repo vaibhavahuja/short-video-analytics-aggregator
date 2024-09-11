@@ -26,7 +26,7 @@ func (e *EventHandler) HandleMessage(ctx context.Context, msg *queue.Message) er
 	var event models.ShortVideoAnalyticsEvent
 	if err := json.Unmarshal(msg.Value, &event); err != nil {
 		log.Ctx(ctx).Err(err).Msg("error while unmarshalling event")
-		return err
+		return errors.New("invalid JSON")
 	}
 	if !event.IsValid() {
 		log.Ctx(ctx).Error().Msg("received invalid event")
