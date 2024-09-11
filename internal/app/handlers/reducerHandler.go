@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/app/models"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue"
@@ -50,7 +51,7 @@ func (r *ReducerHandler) Process(ctx context.Context, videoId string, timestamp 
 
 // validateAndTrimTimeStampToMin Checks if timestamp received is within my range to process and if yes, trim to minutes and return
 func validateAndTrimTimeStampToMin(timestamp string) (string, error) {
-	t, err := utils.ConvertStringToTime(timestamp, time.Layout)
+	t, err := utils.ConvertUnixTimestampToTime(timestamp)
 	if err != nil {
 		return "", err
 	}
@@ -60,7 +61,7 @@ func validateAndTrimTimeStampToMin(timestamp string) (string, error) {
 		return "", errors.New("expired event time")
 	}
 
-	return utils.TrimTimeToMinute(timestamp), nil
+	return fmt.Sprintf("%d", t.Truncate(time.Minute).Unix()), nil
 }
 
 // ProcessCurrentTimeData processes the current time data in the hash map and inserts into the database
@@ -69,7 +70,7 @@ func (r *ReducerHandler) ProcessCurrentTimeData(ctx context.Context) {
 	for {
 		select {
 		case <-ticker:
-			prevMinuteTime := time.Now().Add(-1 * time.Minute)
+			prevMinuteTime := time.Now().Add(-1 * time.Minute).Truncate(time.Minute)
 			prevMinuteTimeString := utils.ConvertTimeToStringUnix(prevMinuteTime)
 			//get all entries for this time
 			videoIds := models.AggregatorMap.GetVideoIdsByTimeStamp(prevMinuteTimeString)
@@ -77,7 +78,7 @@ func (r *ReducerHandler) ProcessCurrentTimeData(ctx context.Context) {
 				// todo - do this via a worker pool, in order to control the number of goroutines spawned
 				go func(id string) {
 					views := models.AggregatorMap.GetViews(id, prevMinuteTimeString)
-					err := r.repo.InsertAggregateByMinute(ctx, id, prevMinuteTimeString, views)
+					err := r.repo.InsertAggregateByMinute(ctx, id, int(prevMinuteTime.Unix()), views)
 					if err != nil {
 						log.Ctx(ctx).Err(err).Msg("error while inserting aggregate by minute")
 					}

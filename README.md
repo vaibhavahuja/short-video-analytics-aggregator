@@ -9,4 +9,8 @@
 
 ### How to run?
 
-<to_add_makefile/docker>
+- Run kafka and cassandra : `/resources/local-setup`: `docker-compose up -d`
+- Run the service : `docker-compose up`
+
+#### API cURLS
+- to add
