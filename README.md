@@ -11,6 +11,7 @@
 - Use command `make`. 
 - You can find initialisation scripts in `Makefile` and `resources/local-setup/scripts/`
 - If you use other config files, make sure to update `APP_ENV` env var.
+- Run the tests `go test -v ./...`
 
 #### API cURLS
 - fetch aggregate views by viewer-id and timestamp
