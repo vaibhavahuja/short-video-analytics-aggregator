@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/app/models"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/queue"
 	"github.com/vaibhavahuja/short-video-analytics-aggregator/internal/external/repository"
@@ -28,7 +29,10 @@ func (r *ReducerHandler) HandleMessage(ctx context.Context, msg *queue.Message) 
 	log.Ctx(ctx).Info().Str("key", string(msg.Key)).Int("partition", msg.Partition).Msg(string(msg.Value))
 	//reducer flow
 	videoId := string(msg.Key)
-	err := r.Process(ctx, videoId, string(msg.Value))
+	if videoId == "" {
+		return errors.New("empty video id. invalid event")
+	}
+	err := r.process(ctx, videoId, string(msg.Value))
 	if err != nil {
 		log.Ctx(ctx).Err(err).Msg("Error while processing message - reducer")
 		return err
@@ -36,7 +40,7 @@ func (r *ReducerHandler) HandleMessage(ctx context.Context, msg *queue.Message) 
 	return nil
 }
 
-func (r *ReducerHandler) Process(ctx context.Context, videoId string, timestamp string) error {
+func (r *ReducerHandler) process(ctx context.Context, videoId string, timestamp string) error {
 	//trim the timestamp to nearest minute and keep storing in a global hash map
 	timeStampInMinutes, err := validateAndTrimTimeStampToMin(timestamp)
 	if err != nil {
@@ -67,6 +71,10 @@ func validateAndTrimTimeStampToMin(timestamp string) (string, error) {
 // ProcessCurrentTimeData processes the current time data in the hash map and inserts into the database
 func (r *ReducerHandler) ProcessCurrentTimeData(ctx context.Context) {
 	ticker := time.Tick(1 * time.Minute)
+	duration := viper.GetDuration("overrides.process-current-time")
+	if duration > 0 {
+		ticker = time.Tick(duration)
+	}
 	for {
 		select {
 		case <-ticker:
@@ -84,7 +92,9 @@ func (r *ReducerHandler) ProcessCurrentTimeData(ctx context.Context) {
 					}
 				}(videoId)
 			}
-
+		case <-ctx.Done():
+			//breaking the infinite loop if context is done
+			return
 		}
 	}
 }

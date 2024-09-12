@@ -18,7 +18,7 @@ type TestCase struct {
 	Err    error
 }
 
-func TestHandleMessage(t *testing.T) {
+func TestEventHandler_HandleMessageHandleMessage(t *testing.T) {
 	mockProducer := &queue.MockProducer{}
 	handler := NewEventHandler(mockProducer)
 	testCases := []TestCase{
